@@ -13,6 +13,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   late String today;
+  String userName = '';
   int numeroActuelle = 0;
   int appelTraites = 0;
   int appelNonTraites = 0;
@@ -26,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     });
     _fetchData();
+    _fetchUserName();
   }
 
   Future<void> _fetchData() async {
@@ -33,14 +35,33 @@ class _HomeScreenState extends State<HomeScreen> {
       final numero = await ApiService.fetchNumeroActuelle();
       final traites = await ApiService.fetchAppelTraites();
       final nonTraites = await ApiService.fetchAppelNonTraites();
+    print('Fetched numero: $numero');
+    print('Fetched traites: $traites');
+    print('Fetched nonTraites: $nonTraites');
       setState(() {
         numeroActuelle = numero;
         appelTraites = traites;
         appelNonTraites = nonTraites;
       });
     } catch (e) {
-      // Afficher un message d'erreur
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur de chargement des données: $e')));
+          print('Error fetching data: $e');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur de chargement des données: $e')),
+      );
+    }
+  }
+
+  Future<void> _fetchUserName() async {
+    try {
+      final user = await ApiService.getAuthenticatedUser();
+      setState(() {
+        userName = user['name'];
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur de chargement du nom d\'utilisateur: $e')),
+      );
     }
   }
 
@@ -61,9 +82,9 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const Text(
-              'Bonjour Aya',
-              style: TextStyle(
+            Text(
+              'Bonjour $userName',
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
@@ -76,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontWeight: FontWeight.normal,
               ),
             ),
-            const SizedBox(height: 8), // Espacement entre la date et le texte suivant
+            const SizedBox(height: 8),
             Container(
               margin: const EdgeInsets.fromLTRB(50.0, 40.0, 0.0, 0.0),
               child: const Text(
@@ -87,20 +108,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 10), // Espacement entre le texte et le bouton
+            const SizedBox(height: 10),
             Container(
               margin: const EdgeInsets.fromLTRB(30.0, 10.0, 30.0, 0.0),
               child: SizedBox(
-                width: 500, // Largeur du bouton
-                height: 80, // Hauteur du bouton
+                width: 500,
+                height: 80,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Ajoutez ici l'action du bouton
+                    // Add your button action here
                     print('Bouton pressé');
                   },
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.black,
-                    backgroundColor: Color.fromARGB(255, 234, 228, 228), // Text color
+                    backgroundColor: const Color.fromARGB(255, 234, 228, 228),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
@@ -116,122 +137,110 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.only(top: 15.0, right: 0.0, left: 40.0, bottom: 0.0),
-              child: Column(
+              padding: const EdgeInsets.only(top: 15.0, left: 40.0),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Numéro actuel',
-                          style: TextStyle(
-                            fontSize: 20.0,
-                            fontWeight: FontWeight.normal,
-                            color: Colors.black,
-                          ),
-                        ),
+                  Expanded(
+                    child: Text(
+                      'Numéro actuel',
+                      style: const TextStyle(
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.normal,
+                        color: Colors.black,
                       ),
-                      SizedBox(width: 0.0), // Espacement entre les deux textes
-                      Expanded(
-                        child: Text(
-                          '$numeroActuelle',
-                          style: TextStyle(
-                            fontSize: 85.0,
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                    ),
+                  ),
+                  const SizedBox(width: 0.0),
+                  Expanded(
+                    child: Text(
+                      '$numeroActuelle',
+                      style: const TextStyle(
+                        fontSize: 85.0,
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
             ),
             Padding(
-              padding: EdgeInsets.only(top: 15.0, right: 0.0, left: 40.0, bottom: 0.0),
-              child: Column(
+              padding: const EdgeInsets.only(top: 15.0, left: 40.0),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '$appelNonTraites',
-                          style: TextStyle(
-                            fontSize: 40.0,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
-                        ),
+                  Expanded(
+                    child: Text(
+                      '$appelNonTraites',
+                      style: const TextStyle(
+                        fontSize: 40.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
                       ),
-                      SizedBox(width: 0.0), // Espacement entre les deux textes
-                      Expanded(
-                        child: Text(
-                          '119',
-                          style: TextStyle(
-                            fontSize: 40.0,
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                    ),
+                  ),
+                  const SizedBox(width: 0.0),
+                  Expanded(
+                    child: Text(
+                      '$appelTraites',
+                      style: const TextStyle(
+                        fontSize: 40.0,
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 8.0), // Espacement entre le texte et le bouton
+            const SizedBox(width: 8.0),
             Padding(
-              padding: EdgeInsets.only(top: 15.0, right: 0.0, left: 0.0, bottom: 0.0),
-              child: Column(
+              padding: const EdgeInsets.only(top: 15.0),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'tickets en attente  ',
-                          style: TextStyle(
-                            fontSize: 20.0,
-                            fontWeight: FontWeight.normal,
-                            color: Colors.black,
-                          ),
-                        ),
+                  Expanded(
+                    child: Text(
+                      'tickets en attente',
+                      style: const TextStyle(
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.normal,
+                        color: Colors.black,
                       ),
-                      SizedBox(width: 0.0), // Espacement entre les deux textes
-                      Expanded(
-                        child: Text(
-                          'tickets Traités',
-                          style: TextStyle(
-                            fontSize: 20.0,
-                            color: Colors.black,
-                            fontWeight: FontWeight.normal,
-                          ),
-                        ),
+                    ),
+                  ),
+                  const SizedBox(width: 0.0),
+                  Expanded(
+                    child: Text(
+                      'tickets Traités',
+                      style: const TextStyle(
+                        fontSize: 20.0,
+                        color: Colors.black,
+                        fontWeight: FontWeight.normal,
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
             ),
             Column(
               children: [
-                const SizedBox(height: 0.0), // Espacement entre le texte et les boutons
+                const SizedBox(height: 0.0),
                 Container(
                   margin: const EdgeInsets.only(top: 15.0, right: 10.0, left: 20.0),
                   child: Row(
                     children: [
                       SizedBox(
-                        width: 130, // Largeur du premier bouton
-                        height: 60, // Hauteur du premier bouton
+                        width: 130,
+                        height: 60,
                         child: ElevatedButton(
                           onPressed: () {
-                            // Ajoutez ici l'action du premier bouton
+                            // Add your first button action here
                             print('Premier bouton pressé');
                           },
                           style: ElevatedButton.styleFrom(
-                            foregroundColor: Color.fromARGB(255, 240, 233, 233), // Couleur du texte du premier bouton
-                            backgroundColor: Color.fromARGB(255, 216, 91, 91), // Couleur de fond du premier bouton
+                            foregroundColor: const Color.fromARGB(255, 240, 233, 233),
+                            backgroundColor: const Color.fromARGB(255, 216, 91, 91),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0), // Arrondissement des coins du premier bouton
+                              borderRadius: BorderRadius.circular(8.0),
                             ),
                           ),
                           child: const Text(
@@ -243,20 +252,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(width: 60), // Espacement entre les deux boutons
+                      const SizedBox(width: 60),
                       SizedBox(
-                        width: 130, // Largeur du deuxième bouton
-                        height: 60, // Hauteur du deuxième bouton
+                        width: 130,
+                        height: 60,
                         child: ElevatedButton(
                           onPressed: () {
-                            // Ajoutez ici l'action du deuxième bouton
+                            // Add your second button action here
                             print('Deuxième bouton pressé');
                           },
                           style: ElevatedButton.styleFrom(
-                            foregroundColor: Color.fromARGB(255, 240, 233, 233), // Couleur du texte du deuxième bouton
-                            backgroundColor: Color.fromARGB(255, 216, 91, 91), // Couleur de fond du deuxième bouton
+                            foregroundColor: const Color.fromARGB(255, 240, 233, 233),
+                            backgroundColor: const Color.fromARGB(255, 216, 91, 91),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0), // Arrondissement des coins du deuxième bouton
+                              borderRadius: BorderRadius.circular(8.0),
                             ),
                           ),
                           child: const Text(
@@ -271,7 +280,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-                // Ajoutez ici votre autre contenu si nécessaire
               ],
             ),
           ],
@@ -298,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Color.fromARGB(97, 57, 51, 68),
+        selectedItemColor: const Color.fromARGB(97, 57, 51, 68),
         unselectedItemColor: Colors.black,
         onTap: _onItemTapped,
       ),

@@ -1,8 +1,9 @@
-// import 'dart:convert';
-//import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:front_flutter/screens/home_screen.dart';
-import 'package:front_flutter/services/api_service.dart';
+import 'package:front_flutter/screens/home_screen.dart'; // Assurez-vous que ce fichier existe
+import 'package:front_flutter/services/api_service.dart'; // Assurez-vous que ce fichier existe
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -12,65 +13,45 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+  bool _isLoading = false;
 
-  /* void _login() async {
-    if (!_formKey.currentState!.validate()) {
+ void _login() async {
+    // Validate form
+    if (_formKey.currentState?.validate() != true) {
       return;
     }
 
-    final email = _emailController.text;
-    final password = _passwordController.text;
-
-    final response = await http.post(
-      Uri.parse('http://127.0.0.1:8000/api/login'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'email': email,
-        'password': password,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> responseData = json.decode(response.body);
-      final String token = responseData['access_token'];
-      
-      // Sauvegarder le token dans le stockage sécurisé pour une utilisation ultérieure
-      // Naviguer vers la page principale de l'application
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
-    } else {
-      // Afficher un message d'erreur
-      final String errorMessage = json.decode(response.body)['message'];
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
-    }
-  }*/
-   void _login() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    setState(() {
+      _isLoading = true;
+    });
 
     final email = _emailController.text;
     final password = _passwordController.text;
 
     try {
       final response = await ApiService.login(email, password);
-      final String token = response['access_token'];
-      
-      // Sauvegarder le token dans le stockage sécurisé pour une utilisation ultérieure
-      // Naviguer vers la page principale de l'application
+     final String token = response['access_token'];
+
+      // Store token securely
+    await _secureStorage.write(key: 'token', value: token);
+
+      // Navigate to HomeScreen
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomeScreen()),
       );
     } catch (e) {
-      // Afficher un message d'erreur
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+  
+    } 
+    finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                ], 
+                ],
               ),
               const SizedBox(height: 45),
               TextFormField(
@@ -113,14 +94,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   labelText: 'Email',
                   border: OutlineInputBorder(),
                   filled: true,
-                  fillColor: Color.fromARGB(255, 255, 252, 252),
+                  fillColor: const Color.fromARGB(255, 255, 252, 252),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your email';
                   }
-                  final emailRegExp = RegExp(
-                      r'^[^@]+@[^@]+\.[^@]+');
+                  final emailRegExp = RegExp(r'^[^@]+@[^@]+\.[^@]+');
                   if (!emailRegExp.hasMatch(value)) {
                     return 'Please enter a valid email address';
                   }
@@ -134,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   labelText: 'Password',
                   border: OutlineInputBorder(),
                   filled: true,
-                  fillColor: Color.fromARGB(255, 255, 252, 252),
+                  fillColor: const Color.fromARGB(255, 255, 252, 252),
                 ),
                 obscureText: true,
                 validator: (value) {
@@ -145,26 +125,28 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
               const SizedBox(height: 50),
-              ElevatedButton(
-                onPressed: _login,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color.fromARGB(255, 218, 64, 64),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  minimumSize: Size(20, 50),
-                ),
-                child: const Text(
-                  'Login',
-                  style: TextStyle(
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ElevatedButton(
+                      onPressed: _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 218, 64, 64),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        minimumSize: const Size(20, 50),
+                      ),
+                      child: const Text(
+                        'Login',
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
             ],
           ),
         ),

@@ -18,7 +18,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() {
       _selectedIndex = index;
     });
-    if (index == 2) {
+    if (index == 1) {
       Navigator.pushNamed(context, '/edit-profile');
     }
   }
